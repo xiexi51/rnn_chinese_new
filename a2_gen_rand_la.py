@@ -7,7 +7,6 @@ with open(ss.data_path + "dla_total_" + str(ss.la_total) + "_dist_" + str(ss.la_
     la = pickle.load(f)
 
 la.sort(key=lambda l:l[1])
-
 la_group = []
 i = 0
 while i < len(la):
@@ -21,7 +20,6 @@ while i < len(la):
     la_group.append(la_item)
 
 rand_group = random.sample(la_group, ss.la_per_sample)
-
 rand_la = []
 for i in range(0, len(rand_group)):
     for j in range(0, len(rand_group[i])):
@@ -29,5 +27,3 @@ for i in range(0, len(rand_group)):
 
 with open(ss.data_path + "rdla_total_" + str(ss.la_total) + "_sample_" + str(ss.la_per_sample), "wb") as f:
     pickle.dump(rand_la, f)
-
-print(len(rand_la))

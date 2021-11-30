@@ -14,7 +14,6 @@ i = 0
 for i in range(ss.nclass):
     char = lb2[i]
     for j in range(ss.repeat):
- #       cx = [np.append(np.append((np.random.rand(2)-0.5)/100.0, [0,1,0]), i)]
         k = 0
         first = True
         sum_p1 = np.zeros(2)
@@ -43,9 +42,7 @@ for i in range(ss.nclass):
 
 z = sorted(zip(x, y), key=lambda l:np.size(l[0], 0))
 result = zip(*z)
-
 x, y = [list(i) for i in result]
-
 batchx = []
 batchy = []
 i = 0

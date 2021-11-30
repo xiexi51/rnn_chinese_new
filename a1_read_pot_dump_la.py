@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import settings as ss
+import os
 
 def remove_point_dist(_x, _y, _dist):
     i = 1
@@ -24,10 +25,6 @@ def remove_point_ang(_x, _y, _tang):
         i += 1
     return _x, _y
 
-# filelist = []
-# taglist = []
-# strokeslist = []
-
 LA = []
 for file in range(1001, 1001 + ss.la_total):
     filename = "e:\\tf_projects\\Pot1.1Train\\" + str(file) + ".pot"
@@ -39,23 +36,19 @@ for file in range(1001, 1001 + ss.la_total):
     with open(filename, "rb") as f:
         for _ in range(0, fbegin):
             f.read(struct.unpack("h", f.read(2))[0] - 2)
-
         total = 0
         while total < fn:
             A = []
-            # filelist.append(file)
             A.append(file)
             _sample_size = f.read(2)
             if len(_sample_size) == 0:
                 break
             sample_size = struct.unpack("h", _sample_size)[0]
-          #  tag_code = struct.unpack("l", f.read(4))[0]
             _tag_code = f.read(2)
             ba = bytearray(_tag_code)
             b2 = ba[1]
             ba[1] = ba[0]
             ba[0] = b2
-
             f.read(2)
             try:
                 tag_code = ba.decode("gb18030")
@@ -63,9 +56,7 @@ for file in range(1001, 1001 + ss.la_total):
                 print(str(total) + " gb2312 decode exception")
             else:
                 print(str(total) + " " + tag_code)
-            #taglist.append(tag_code)
             A.append(tag_code)
-
             stroke_number = struct.unpack("h", f.read(2))[0]
             strokex = []
             strokey = []
@@ -91,10 +82,8 @@ for file in range(1001, 1001 + ss.la_total):
                         _sx, _sy = remove_point_ang(_sx, _sy, ss.la_remove_ang_th)
                 strokex.append(_sx)
                 strokey.append(_sy)
-
             if total == show:
                 fig1 = plt.figure()
-
                 fig_origin = fig1.add_subplot(1,3,1)
                 for i in range(0, len(origin_x)):
                     fig_origin.plot(origin_x[i], origin_y[i], color="black")
@@ -103,7 +92,6 @@ for file in range(1001, 1001 + ss.la_total):
 
                 for i in range(0, len(strokex)):
                     fig_before_preprocess_plt.plot(strokex[i], strokey[i], color="black")
-
             lenl = []
             pxl = []
             pyl = []
@@ -113,10 +101,8 @@ for file in range(1001, 1001 + ss.la_total):
                     lenl.append(_lenl)
                     pxl.append(_lenl * (strokex[i][j + 1] + strokex[i][j]) / 2)
                     pyl.append(_lenl * (strokey[i][j + 1] + strokey[i][j]) / 2)
-
             ux = np.sum(pxl) / np.sum(lenl)
             uy = np.sum(pyl) / np.sum(lenl)
-
             dxl = []
             k = 0
             for i in range(0, len(strokex)):
@@ -127,7 +113,6 @@ for file in range(1001, 1001 + ss.la_total):
                     k += 1
 
             thx = np.sqrt(np.sum(dxl) / np.sum(lenl))
-
             m = 0
             for i in range(0, len(strokex)):
                 for j in range(0, len(strokex[i])):
@@ -158,21 +143,18 @@ for file in range(1001, 1001 + ss.la_total):
 
             A.append(L)
             LA.append(A)
-            #strokeslist.append(L)
             if total == show:
                 fig_after_preprocess_plt = fig1.add_subplot(1, 3, 3)
-
                 for i in range(0, len(strokex)):
                     fig_after_preprocess_plt.plot(strokex[i], strokey[i], color="black")
                 plt.show()
-
             if total > show:
                 break
             if struct.unpack("l", f.read(4))[0] != -1:
                 print("error")
             total += 1
 
+if not os.path.exists(ss.data_path):
+    os.makedirs(ss.data_path)
 with open(ss.data_path + "dla_total_" + str(ss.la_total) + "_dist_" + str(ss.la_remove_dist_th) + "_ang_" + str(ss.la_remove_ang_th),"wb") as f:
     pickle.dump(LA, f, protocol=4)
-
-

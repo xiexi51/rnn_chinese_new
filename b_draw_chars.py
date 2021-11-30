@@ -1,9 +1,6 @@
 import matplotlib.pyplot as plt
-import tensorflow as tf
 import numpy as np
-from b_model import construct_model
 import settings as ss
-import pickle
 
 def draw_real_char(ch):
     fig1 = plt.figure()
@@ -58,12 +55,10 @@ def draw_chars(x, y, model, classes, maxlen, ifshow, fname):
         pnt_cnt = 0
         prev_x = 0
         prev_y = 0
-
         while pnt_cnt < maxlen:
             pred = np.squeeze(model(pnt_in))
             pi, mux, muy, sigmax, sigmay = np.split(pred[:-3], 5, axis=-1)
             p = pred[-3:]
-
             sum_choose = True
             N_choose = 0
             if sum_choose:
@@ -93,15 +88,12 @@ def draw_chars(x, y, model, classes, maxlen, ifshow, fname):
                 S_choose = np.argmax(p)
 
             s_pred[S_choose] = 1
-
             if(s_pred[2] == 1):
                 break
             if(s_pred[0] == 1):
                 ch_plt.plot([prev_x, x_pred], [prev_y, y_pred], color='black')
-
             prev_x = x_pred
             prev_y = y_pred
-
             pnt_cnt += 1
         ch_cnt += 1
 
@@ -109,20 +101,3 @@ def draw_chars(x, y, model, classes, maxlen, ifshow, fname):
         plt.show()
     else:
         plt.savefig(fname)
-
-# draw_real_char(2)
-# exit()
-
-# config = tf.compat.v1.ConfigProto()
-# config.gpu_options.allow_growth=True
-if False:
-    sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.45)))
-    tf.compat.v1.keras.backend.set_session(sess)
-
-    with open(ss.data_path + "x_y_lb100_n_" + str(ss.nclass) + "_r_" + str(ss.repeat) + "_dist_" + str(ss.remove_dist_th) + "_ang_" + str(ss.remove_ang_th) + "_drop_" + str(ss.drop) + "_np_" + str(ss.noise_prob) + "_nr_" + str(ss.noise_ratio), 'rb') as f:
-        x, y = pickle.load(f)
-
-
-    model = construct_model(ss.units, ss.nclass, ss.M, True, [1, 1, 1])
-  #  model.load_weights(tf.train.latest_checkpoint(ss.checkpoint_path))
-    draw_chars(x, y, model, [0, 1, 2, 3, 4], 50, True, 'testfig')

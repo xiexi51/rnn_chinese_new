@@ -7,12 +7,6 @@ import settings as ss
 with open(ss.data_path + "x_y_la_n_" + str(ss.la_total) + "_s_" + str(ss.la_per_sample) + "_dist_" + str(ss.la_remove_dist_th) + "_ang_" + str(ss.la_remove_ang_th), "rb") as f:
     x, y = pickle.load(f)
 
-xd = np.zeros(len(x), dtype=int)
-for i in range(len(x)):
-    xd[i] = np.size(x[i], 0)
-
-uniquex = np.unique(xd)
-
 def train_generator():
     i = 0
     while True:
@@ -22,16 +16,12 @@ def train_generator():
         i += 1
         if i == len(x):
             return
-            i = 0
-            continue
         while np.size(x[i], 0) == curlen:
             xout = np.append(xout, [x[i]], axis=0)
             yout = np.append(yout, [y[i]], axis=0)
             i += 1
             if i == len(x):
                 return
-                i = 0
-                break
         yield (xout, np.expand_dims(yout, 1))
 
 config = tf.compat.v1.ConfigProto()
@@ -79,7 +69,6 @@ class S_LSTM(keras.layers.Layer):
         batch_size = in_shape[0]
         init_c = []
         init_h = []
-
         for i in range(self.nlayer):
             init_c.append(tf.zeros([batch_size, self.h_size]))
             init_h.append(tf.zeros([batch_size, self.h_size]))
@@ -104,42 +93,15 @@ class S_LSTM(keras.layers.Layer):
         config.update({"h_size": self.h_size, "nlayer": self.nlayer})
         return config
 
-stacked_cell = tf.keras.layers.StackedRNNCells(
-            [tf.keras.layers.LSTMCell(units=16, implementation=1) for _ in range(2)])
-#rnn_layer = tf.keras.layers.RNN(stacked_cell, return_state=False, return_sequences=True)
-rnn_layer = tf.keras.layers.RNN(tf.keras.layers.LSTMCell(units=16, implementation=1), return_state=False, return_sequences=True)
-
-# stacked_gru_cell = tf.keras.layers.StackedRNNCells([tf.keras.layers.GRUCell(units=16, implementation=1) for _ in range(2)])
-# gru_layer = tf.keras.layers.RNN(stacked_gru_cell, return_state=False, return_sequences=True)
-gru_layer2 = tf.keras.layers.RNN(tf.keras.layers.GRUCell(units=16,implementation=1))
-
 s_lstm_layer = S_LSTM(16, 2)
-# s_gru_layer = S_GRU(16, 2)
-
-while True:
-    a = take_batches.as_numpy_iterator().__next__()
-    if np.size(a[0], 0) > 1:
-        break
-
-#f = gru_layer(a[0])
-g = gru_layer2(a[0])
-c = s_lstm_layer(a[0])
-d = rnn_layer(a[0])
-#e = s_gru_layer(a[0])
 
 model = keras.Sequential([
     keras.layers.Input(shape=(None, 6), dtype=tf.float32, ragged=False),
-    #keras.layers.Bidirectional(rnn_layer),
     s_lstm_layer,
- #   keras.layers.Bidirectional(s_lstm_layer),
- #   s_gru_layer,
     keras.layers.Dropout(0.2),
     keras.layers.TimeDistributed(keras.layers.Dense(10, activation="softmax")),
-
 ])
 
 model.compile(optimizer=keras.optimizers.Adam(1e-4), loss=keras.losses.CategoricalCrossentropy(from_logits=False), metrics=['accuracy'])
-
 model.summary(line_length=200)
-
 model.fit(take_batches, steps_per_epoch=500, epochs=300)

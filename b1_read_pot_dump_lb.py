@@ -34,11 +34,6 @@ def draw(D, S):
             subplot3.plot([p[0], p[0] + D[i, 0]], [p[1], p[1] + D[i, 1]], "black")
         p = p + D[i]
 
-
-# filelist = []
-# taglist = []
-# strokeslist = []
-
 LB = []
 for file in range(1001, 1001 + ss.lb_total):
     filename = ss.pot_files_path + str(file) + ".pot"
@@ -50,23 +45,19 @@ for file in range(1001, 1001 + ss.lb_total):
     with open(filename, "rb") as f:
         for _ in range(0, fbegin):
             f.read(struct.unpack("h", f.read(2))[0] - 2)
-
         total = 0
         while total < fn:
             B = []
-            # filelist.append(file)
             B.append(file)
             _sample_size = f.read(2)
             if len(_sample_size) == 0:
                 break
             sample_size = struct.unpack("h", _sample_size)[0]
-          #  tag_code = struct.unpack("l", f.read(4))[0]
             _tag_code = f.read(2)
             ba = bytearray(_tag_code)
             b2 = ba[1]
             ba[1] = ba[0]
             ba[0] = b2
-
             f.read(2)
             try:
                 tag_code = ba.decode("gb18030")
@@ -74,9 +65,7 @@ for file in range(1001, 1001 + ss.lb_total):
                 print(str(total) + " gb2312 decode exception")
             else:
                 print(str(total) + " " + tag_code)
-            #taglist.append(tag_code)
             B.append(tag_code)
-
             stroke_number = struct.unpack("h", f.read(2))[0]
             strokex = []
             strokey = []
@@ -105,13 +94,10 @@ for file in range(1001, 1001 + ss.lb_total):
 
             if total == show:
                 fig1 = plt.figure()
-
                 fig_origin = fig1.add_subplot(1,3,1)
                 for i in range(0, len(origin_x)):
                     fig_origin.plot(origin_x[i], origin_y[i], color="black")
-
                 fig_before_preprocess_plt = fig1.add_subplot(1, 3, 2)
-
                 for i in range(0, len(strokex)):
                     fig_before_preprocess_plt.plot(strokex[i], strokey[i], color="black")
 
@@ -127,7 +113,6 @@ for file in range(1001, 1001 + ss.lb_total):
 
             ux = np.sum(pxl) / np.sum(lenl)
             uy = np.sum(pyl) / np.sum(lenl)
-
             dxl = []
             k = 0
             for i in range(0, len(strokex)):
@@ -138,7 +123,6 @@ for file in range(1001, 1001 + ss.lb_total):
                     k += 1
 
             thx = np.sqrt(np.sum(dxl) / np.sum(lenl))
-
             m = 0
             for i in range(0, len(strokex)):
                 for j in range(0, len(strokex[i])):
@@ -169,18 +153,14 @@ for file in range(1001, 1001 + ss.lb_total):
             S[m - 2, 0] = 0
             S[m - 2, 1] = 0
             S[m - 2, 2] = 1
-
             B.append(D)
             B.append(S)
             LB.append(B)
-            #strokeslist.append(L)
             if total == show:
                 fig_after_preprocess_plt = fig1.add_subplot(1, 3, 3)
-
                 for i in range(0, len(strokex)):
                     fig_after_preprocess_plt.plot(strokex[i], strokey[i], color="black")
                 plt.show()
-
             if total > show:
                 break
             if struct.unpack("l", f.read(4))[0] != -1:
@@ -189,7 +169,5 @@ for file in range(1001, 1001 + ss.lb_total):
 
 if not os.path.exists(ss.data_path):
     os.makedirs(ss.data_path)
-
 with open(ss.data_path + "dlb_total_" + str(ss.lb_total) + "_dist_" + str(ss.lb_remove_dist_th) + "_ang_" + str(ss.lb_remove_ang_th),"wb") as f:
-    #pickle.dump((filelist, taglist, strokeslist), f, protocol=4)
     pickle.dump(LB, f, protocol=4)
